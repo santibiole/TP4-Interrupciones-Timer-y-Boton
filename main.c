@@ -38,3 +38,10 @@ void Delay(volatile uint32_t nCount) {
 	while (nCount--) {
 	}
 }
+
+void APP_ISR_sw (void){
+	led_toggle(0);
+	led_toggle(1);
+	led_toggle(2);
+	led_toggle(3);
+}

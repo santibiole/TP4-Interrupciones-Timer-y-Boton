@@ -20,12 +20,22 @@ GPIO_TypeDef* leds_port[] = { GPIOD, GPIOD, GPIOD, GPIOD };
 /* Leds disponibles */
 const uint16_t leds[] = { LED_V, LED_R, LED_N, LED_A };
 
+/*
+	Prototipo de una función externa, es decir, una frecuencia que va a estar implementada en algún otro
+	lugar de nuestro proyecto. El linker es el que se va a encargar de ubicar donde está implementada.
+ */
+extern void APP_ISR_sw (void);
+
 void led_on(uint8_t led) {
 	GPIO_SetBits(leds_port[led], leds[led]);
 }
 
 void led_off(uint8_t led) {
 	GPIO_ResetBits(leds_port[led], leds[led]);
+}
+
+void led_toggle(uint8_t led) {
+	GPIO_ToggleBits(leds_port[led], leds[led]);
 }
 
 uint8_t sw_getState(void) {
@@ -41,7 +51,8 @@ void EXTI0_IRQHandler(void) {
 			{
 		EXTI_ClearFlag(EXTI_Line0); // Limpiamos la Interrupcion
 		// Rutina:
-		GPIO_ToggleBits(leds_port[1], leds[1]);
+		APP_ISR_sw();
+		//GPIO_ToggleBits(leds_port[1], leds[1]);
 	}
 }
 
@@ -49,7 +60,7 @@ void EXTI0_IRQHandler(void) {
  * @brief Interrupcion llamada al pasar 1ms
  */
 void TIM2_IRQHandler(void) {
-	static uint16_t count = 0;
+	static uint16_t count = 0; // static: es una variable que se utiliza solo dentro de esta función.
 
 	if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET) {
 		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
@@ -111,20 +122,20 @@ void bsp_sw_init() {
 
 	// Configuro interrupcion
 
-	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOA, EXTI_PinSource0);
+	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOA, EXTI_PinSource0); // Pin 0 del puerto A, lo hace interrupción.
 
 	/* Configuro EXTI Line */
-	EXTI_InitStructure.EXTI_Line = EXTI_Line0;
-	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
+	EXTI_InitStructure.EXTI_Line = EXTI_Line0; // Interrupción en Línea 0.
+	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt; // Modo "Interrupción".
+	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising; // Interrupción por flanco ascendente.
 	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
 	EXTI_Init(&EXTI_InitStructure);
 
 	/* Habilito la EXTI Line Interrupt */
-	NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01;
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn; // Qué el canal sea el de la interrupción 0.
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1; // Prioridad.
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01; // Canal habilitado, habilito la interrupción.
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE; // Habilito la interrupción.
 	NVIC_Init(&NVIC_InitStructure);
 }
 
@@ -144,13 +155,13 @@ void bsp_timer_config(void) {
 	/* TIM2 habilitado */
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 	/* Configuracion de la base de tiempo */
-	TIM_TimeBaseStruct.TIM_Period = 1000; // 1 MHz bajado a 1 KHz (1 ms)
-	TIM_TimeBaseStruct.TIM_Prescaler = (2 * 8000000 / 1000000) - 1; // 8 MHz bajado a 1 MHz
-	TIM_TimeBaseStruct.TIM_ClockDivision = TIM_CKD_DIV1;
-	TIM_TimeBaseStruct.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStruct);
+	TIM_TimeBaseStruct.TIM_Period = 1000; // 1 MHz bajado a 1 KHz (1 ms). ¿Cómo? Cuento 1us, aumento el contador, y cuando llego a mil tengo 1ms, es decir 1KHz.
+	TIM_TimeBaseStruct.TIM_Prescaler = (2 * 8000000 / 1000000) - 1; // 8 MHz bajado a 1 MHz - Pre Escalador.
+	TIM_TimeBaseStruct.TIM_ClockDivision = TIM_CKD_DIV1; // Divisor.
+	TIM_TimeBaseStruct.TIM_CounterMode = TIM_CounterMode_Up; // Como queremos que cuente.
+	TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStruct); // Inicializamos timer.
 	/* TIM habilitado */
-	TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);
+	TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE); // Inicializamos la interrupción.
 	/* TIM2 contador habilitado */
 	TIM_Cmd(TIM2, ENABLE);
 

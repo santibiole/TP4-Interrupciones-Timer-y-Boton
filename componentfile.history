@@ -12,8 +12,8 @@
   <File usedCount="3" path="cmsis_boot/system_stm32f4xx.c"/>  
   <File usedCount="3" path="cmsis_boot/system_stm32f4xx.h"/>  
   <File usedCount="3" path="cmsis_lib/source/stm32f4xx_rcc.c"/>  
-  <File usedCount="2" path="cmsis_lib/include/stm32f4xx_gpio.h"/>  
-  <File usedCount="2" path="cmsis_lib/source/stm32f4xx_gpio.c"/>  
+  <File usedCount="3" path="cmsis_lib/include/stm32f4xx_gpio.h"/>  
+  <File usedCount="3" path="cmsis_lib/source/stm32f4xx_gpio.c"/>  
   <File usedCount="3" path="cmsis_lib/include/stm32f4xx_exti.h"/>  
   <File usedCount="3" path="cmsis_lib/source/stm32f4xx_exti.c"/>  
   <File usedCount="3" path="cmsis_lib/include/misc.h"/>  
