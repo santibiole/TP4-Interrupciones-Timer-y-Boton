@@ -27,6 +27,8 @@ const uint16_t leds[] = { LED_V, LED_R, LED_N, LED_A };
 extern void APP_ISR_sw (void);
 extern void APP_ISR_1ms (void);
 
+volatile uint16_t bsp_count_ms = 0; // Defino como volatile para que el compilador no interprete el while(bsp_count_ms) como un bucle infinito.
+
 void led_on(uint8_t led) {
 	GPIO_SetBits(leds_port[led], leds[led]);
 }
@@ -43,13 +45,18 @@ uint8_t sw_getState(void) {
 	return GPIO_ReadInputDataBit(GPIOA, BOTON);
 }
 
+void bsp_delay_ms(uint16_t x){
+	bsp_count_ms = x;
+	while (bsp_count_ms);
+}
+
 /**
  * @brief Interrupcion llamada cuando se preciona el pulsador
  */
 void EXTI0_IRQHandler(void) {
 
-	if (EXTI_GetITStatus(EXTI_Line0) != RESET) { //Verificamos si es la del pin configurado
-		EXTI_ClearFlag(EXTI_Line0); // Limpiamos la Interrupcion
+	if (EXTI_GetITStatus(EXTI_Line0) != RESET) { //Verificamos si es la del pin configurado.
+		EXTI_ClearFlag(EXTI_Line0); // Limpiamos la Interrupcion.
 		// Rutina:
 		APP_ISR_sw();
 		//GPIO_ToggleBits(leds_port[1], leds[1]);
@@ -66,6 +73,10 @@ void TIM2_IRQHandler(void) {
 		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 		// Rutina:
 		APP_ISR_1ms();
+
+		if (bsp_count_ms) { //Pregunto si bsp_count_ms es distinto de 0.
+			bsp_count_ms--;
+		}
 	}
 }
 

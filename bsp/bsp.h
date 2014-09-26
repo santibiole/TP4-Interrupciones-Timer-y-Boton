@@ -23,6 +23,13 @@ void led_off(uint8_t led);
 void led_toggle(uint8_t led);
 
 /**
+ * @brief Delay de x ms
+ *
+ * @param x cantidad de ms
+ */
+void bsp_delay_ms(uint16_t x);
+
+/**
  * @brief Delay por software
  */
 uint8_t sw_getState();
