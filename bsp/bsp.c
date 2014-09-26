@@ -25,6 +25,7 @@ const uint16_t leds[] = { LED_V, LED_R, LED_N, LED_A };
 	lugar de nuestro proyecto. El linker es el que se va a encargar de ubicar donde está implementada.
  */
 extern void APP_ISR_sw (void);
+extern void APP_ISR_1ms (void);
 
 void led_on(uint8_t led) {
 	GPIO_SetBits(leds_port[led], leds[led]);
@@ -47,27 +48,24 @@ uint8_t sw_getState(void) {
  */
 void EXTI0_IRQHandler(void) {
 
-	if (EXTI_GetITStatus(EXTI_Line0) != RESET) //Verificamos si es la del pin configurado
-			{
+	if (EXTI_GetITStatus(EXTI_Line0) != RESET) { //Verificamos si es la del pin configurado
 		EXTI_ClearFlag(EXTI_Line0); // Limpiamos la Interrupcion
 		// Rutina:
 		APP_ISR_sw();
 		//GPIO_ToggleBits(leds_port[1], leds[1]);
 	}
+
 }
 
 /**
  * @brief Interrupcion llamada al pasar 1ms
  */
 void TIM2_IRQHandler(void) {
-	static uint16_t count = 0; // static: es una variable que se utiliza solo dentro de esta función.
 
 	if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET) {
 		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
-		if (count++ > 1000) {
-			GPIO_ToggleBits(leds_port[0], leds[0]);
-			count = 0;
-		}
+		// Rutina:
+		APP_ISR_1ms();
 	}
 }
 
@@ -127,7 +125,7 @@ void bsp_sw_init() {
 	/* Configuro EXTI Line */
 	EXTI_InitStructure.EXTI_Line = EXTI_Line0; // Interrupción en Línea 0.
 	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt; // Modo "Interrupción".
-	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising; // Interrupción por flanco ascendente.
+	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling; // Interrupción por flanco ascendente.
 	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
 	EXTI_Init(&EXTI_InitStructure);
 

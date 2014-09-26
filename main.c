@@ -40,8 +40,17 @@ void Delay(volatile uint32_t nCount) {
 }
 
 void APP_ISR_sw (void){
-	led_toggle(0);
+	//led_toggle(0);
 	led_toggle(1);
 	led_toggle(2);
 	led_toggle(3);
+}
+
+void APP_ISR_1ms (void){
+	static uint16_t count_1s = 0; // static: es una variable que se declara una sola vez, se fija en 0, y luego cada vez que entramos en la función, count conserva el valor anterior.
+
+	if (count_1s++ > 1000) {
+		led_toggle(0);
+		count_1s = 0;
+	}
 }
