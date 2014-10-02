@@ -175,3 +175,21 @@ void bsp_timer_config(void) {
 	TIM_Cmd(TIM2, ENABLE);
 
 }
+
+
+void bsp_pwm_init (void) {
+	TIM_TimeBaseInitTypeDef TIM_Config;
+	GPIO_InitTypeDef GPIO_Config;
+
+	GPIO_Config.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_Config.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
+	GPIO_Config.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Config.GPIO_PuPd = GPIO_PuPd_UP;
+	GPIO_Config.GPIO_OType = GPIO_OType_PP;
+	GPIO_Init(GPIOD, &GPIO_Config);
+
+	TIM_Config.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_Config.TIM_ClockDivision = 0;
+	TIM_Config.TIM_Period = x;
+	TIM_Config.TIM_Prescaler = x;
+}
