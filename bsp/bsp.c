@@ -20,6 +20,9 @@ GPIO_TypeDef* leds_port[] = { GPIOD, GPIOD, GPIOD, GPIOD };
 /* Leds disponibles */
 const uint16_t leds[] = { LED_V, LED_R, LED_N, LED_A };
 
+/* Leds disponibles PWM*/
+uint32_t* const leds_pwm[] = { &TIM4->CCR1, &TIM4->CCR3, &TIM4->CCR2, &TIM4->CCR4 }; // Contiene punteros a variables del tipo unit32_t a distintas direcciones de memoria.
+
 /*
 	Prototipo de una función externa, es decir, una frecuencia que va a estar implementada en algún otro
 	lugar de nuestro proyecto. El linker es el que se va a encargar de ubicar donde está implementada.
@@ -43,6 +46,10 @@ void led_toggle(uint8_t led) {
 
 uint8_t sw_getState(void) {
 	return GPIO_ReadInputDataBit(GPIOA, BOTON);
+}
+
+void led_set_bright (uint8_t led, uint8_t value){
+	*leds_pwm[led] = 10000 * value / 100; // Porcentaje.
 }
 
 void bsp_delay_ms(uint16_t x){
@@ -85,10 +92,10 @@ void bsp_sw_init();
 void bsp_timer_config();
 
 void bsp_init() {
-	bsp_led_init();
+	//bsp_led_init();
+	bsp_pwm_init();
 	bsp_sw_init();
 	bsp_timer_config();
-
 }
 
 /**
@@ -178,7 +185,11 @@ void bsp_timer_config(void) {
 
 
 void bsp_pwm_init (void) {
-	TIM_TimeBaseInitTypeDef TIM_Config;
+
+/*
+ * 	Inicialización de Puerto D en modo Alternative Function y configuración.
+ */
+
 	GPIO_InitTypeDef GPIO_Config;
 
 	GPIO_Config.GPIO_Mode = GPIO_Mode_AF;
@@ -188,8 +199,66 @@ void bsp_pwm_init (void) {
 	GPIO_Config.GPIO_OType = GPIO_OType_PP;
 	GPIO_Init(GPIOD, &GPIO_Config);
 
+/*
+ * 	Configuración del Puerto D en modo Alternative Function como TIM4.
+ */
+
+	GPIO_PinAFConfig(GPIOD, GPIO_Pin_12, GPIO_AF_TIM4);
+	GPIO_PinAFConfig(GPIOD, GPIO_Pin_13, GPIO_AF_TIM4);
+	GPIO_PinAFConfig(GPIOD, GPIO_Pin_14, GPIO_AF_TIM4);
+	GPIO_PinAFConfig(GPIOD, GPIO_Pin_15, GPIO_AF_TIM4);
+
+/*
+ * 	Inicialización y configuración del TIMER.
+ */
+
+	TIM_TimeBaseInitTypeDef TIM_Config;
+
 	TIM_Config.TIM_CounterMode = TIM_CounterMode_Up;
 	TIM_Config.TIM_ClockDivision = 0;
-	TIM_Config.TIM_Period = x;
-	TIM_Config.TIM_Prescaler = x;
+	TIM_Config.TIM_Period = 10000; // Cuantos TIC voy a contar.
+	TIM_Config.TIM_Prescaler = 16-1; // 1us por TIC (-1 porque no arranca en cero).
+	TIM_TimeBaseInit (TIM4, &TIM_Config);
+
+/*
+ * 	Inicialización y configuración del TIMER Output Compare en modo PWM1.
+ */
+
+	TIM_OCInitTypeDef TIM_OC_Config;
+
+	// Configuración del periférico
+	TIM_OC_Config.TIM_OCMode = TIM_OCMode_PWM1;
+	TIM_OC_Config.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OC_Config.TIM_Pulse = 0;
+	TIM_OC_Config.TIM_OCPolarity = TIM_OCPolarity_High;
+	// CH1 del PWM
+	TIM_OC1Init(TIM4, &TIM_OC_Config);
+	TIM_OC1PreloadConfig(TIM4, TIM_OCPreload_Enable);
+
+	// ReConfiguración del periférico por posible modificación del puntero en el CH1 del PWM
+	TIM_OC_Config.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OC_Config.TIM_Pulse = 0;
+	// CH2 del PWM
+	TIM_OC2Init(TIM4, &TIM_OC_Config);
+	TIM_OC2PreloadConfig(TIM4, TIM_OCPreload_Enable);
+
+	// ReConfiguración del periférico por posible modificación del puntero en el CH2 del PWM
+	TIM_OC_Config.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OC_Config.TIM_Pulse = 0;
+	// CH3 del PWM
+	TIM_OC3Init(TIM4, &TIM_OC_Config);
+	TIM_OC3PreloadConfig(TIM4, TIM_OCPreload_Enable);
+
+	// ReConfiguración del periférico por posible modificación del puntero en el CH3 del PWM
+	TIM_OC_Config.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OC_Config.TIM_Pulse = 0;
+	// CH4 del PWM
+	TIM_OC4Init(TIM4, &TIM_OC_Config);
+	TIM_OC4PreloadConfig(TIM4, TIM_OCPreload_Enable);
+
+	// Habilitar PreCargador
+	TIM_ARRPreloadConfig(TIM4, ENABLE);
+
+	// Habilitación global del TIMER
+	TIM_Cmd(TIM2, ENABLE);
 }

@@ -23,6 +23,14 @@ void led_off(uint8_t led);
 void led_toggle(uint8_t led);
 
 /**
+ * @brief PWM
+ *
+ * @param led
+ * @param value Ciclo de trabajo
+ */
+void led_set_bright (uint8_t led, uint8_t value);
+
+/**
  * @brief Delay de x ms
  *
  * @param x cantidad de ms
