@@ -30,23 +30,30 @@ int main(void) {
 
 		bsp_delay_ms(10);
 
-		led_set_bright(0, brillo);
-		led_set_bright(1, brillo);
-		led_set_bright(2, brillo);
-		led_set_bright(3, brillo);
+//		led_set_bright(0, brillo);
+//		led_set_bright(1, brillo);
+//		led_set_bright(2, brillo);
+//		led_set_bright(3, brillo);
+//
+//		if (brillo >= 100)
+//			flag = 0;
+//		if (brillo <= 0)
+//			flag = 1;
+//		if (flag)
+//			brillo++;
+//		else
+//			brillo--;
 
-		if (brillo >= 100)
-			flag = 0;
-		if (brillo <= 0)
-			flag = 1;
-		if (flag)
-			brillo++;
-		else
-			brillo--;
+		acc_x = 100*bsp_get_acc('x');
+		acc_y = 100*bsp_get_acc('y');
 
-		acc_x = bsp_get_acc('x');
-		acc_y = bsp_get_acc('y');
-
+		if (acc_x<0){
+			led_set_bright(1, 0);
+			led_set_bright(0, acc_x*(-1));
+		} else {
+			led_set_bright(0, 0);
+			led_set_bright(1, acc_x);
+		}
 	}
 }
 
