@@ -25,6 +25,7 @@ int main(void) {
 	int flag = 0;
 	float acc_x;
 	float acc_y;
+	float acc_z;
 
 	while (1) {
 
@@ -46,6 +47,7 @@ int main(void) {
 
 		acc_x = 100*bsp_get_acc('x');
 		acc_y = 100*bsp_get_acc('y');
+		acc_z = 100*bsp_get_acc('z');
 
 		if (acc_x<0){
 			led_set_bright(1, 0);
