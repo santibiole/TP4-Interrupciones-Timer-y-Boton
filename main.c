@@ -23,12 +23,17 @@ int main(void) {
 	bsp_init();
 	int brillo = 0;
 	int flag = 0;
+	float acc_x;
+	float acc_y;
 
 	while (1) {
+
+		bsp_delay_ms(10);
+
+		led_set_bright(0, brillo);
 		led_set_bright(1, brillo);
 		led_set_bright(2, brillo);
 		led_set_bright(3, brillo);
-		led_set_bright(4, brillo);
 
 		if (brillo >= 100)
 			flag = 0;
@@ -36,9 +41,12 @@ int main(void) {
 			flag = 1;
 		if (flag)
 			brillo++;
-		else {
+		else
 			brillo--;
-		}
+
+		acc_x = bsp_get_acc('x');
+		acc_y = bsp_get_acc('y');
+
 	}
 }
 

@@ -7,6 +7,7 @@
 #include "stm32f4xx_syscfg.h"	// configuraciones Generales
 #include "misc.h"				// Vectores de interrupciones (NVIC)
 #include "bsp.h"
+#include "LIS3DSH.h"
 
 #define LED_V GPIO_Pin_12
 #define LED_N GPIO_Pin_13
@@ -96,6 +97,25 @@ void bsp_init() {
 	bsp_pwm_init();
 	bsp_sw_init();
 	bsp_timer_config();
+	LIS3DSH_Init();
+	LIS3DSH_Set_Output(0X47); // 25MHz
+}
+
+float bsp_get_acc (char axis) {
+	switch(axis){
+	case 'X':
+	case 'x':
+		return LIS3DSH_Get_X_Out(LIS3DSH_Sense_2g);
+		break;
+	case 'Y':
+	case 'y':
+		return LIS3DSH_Get_Y_Out(LIS3DSH_Sense_2g);
+	case 'Z':
+	case 'z':
+		return LIS3DSH_Get_Z_Out(LIS3DSH_Sense_2g);
+	default:
+		return -999.9;
+	}
 }
 
 /**
@@ -107,9 +127,7 @@ void bsp_led_init() {
 	// Arranco el clock del periferico
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_15 | GPIO_Pin_14;
-	GPIO_InitStruct.GPIO_Pin |= GPIO_Pin_13 | GPIO_Pin_12;
-
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_15 | GPIO_Pin_14 | GPIO_Pin_13 | GPIO_Pin_12;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP; // (Push/Pull)
@@ -186,10 +204,15 @@ void bsp_timer_config(void) {
 
 void bsp_pwm_init (void) {
 
+	/* Habilito el clock */
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
+
+	/* Configuro leds como Segunda Funcion */
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+
 /*
  * 	Inicialización de Puerto D en modo Alternative Function y configuración.
  */
-
 	GPIO_InitTypeDef GPIO_Config;
 
 	GPIO_Config.GPIO_Mode = GPIO_Mode_AF;
@@ -203,15 +226,14 @@ void bsp_pwm_init (void) {
  * 	Configuración del Puerto D en modo Alternative Function como TIM4.
  */
 
-	GPIO_PinAFConfig(GPIOD, GPIO_Pin_12, GPIO_AF_TIM4);
-	GPIO_PinAFConfig(GPIOD, GPIO_Pin_13, GPIO_AF_TIM4);
-	GPIO_PinAFConfig(GPIOD, GPIO_Pin_14, GPIO_AF_TIM4);
-	GPIO_PinAFConfig(GPIOD, GPIO_Pin_15, GPIO_AF_TIM4);
+	GPIO_PinAFConfig(GPIOD, GPIO_PinSource12, GPIO_AF_TIM4);
+	GPIO_PinAFConfig(GPIOD, GPIO_PinSource13, GPIO_AF_TIM4);
+	GPIO_PinAFConfig(GPIOD, GPIO_PinSource14, GPIO_AF_TIM4);
+	GPIO_PinAFConfig(GPIOD, GPIO_PinSource15, GPIO_AF_TIM4);
 
 /*
  * 	Inicialización y configuración del TIMER.
  */
-
 	TIM_TimeBaseInitTypeDef TIM_Config;
 
 	TIM_Config.TIM_CounterMode = TIM_CounterMode_Up;
@@ -223,7 +245,6 @@ void bsp_pwm_init (void) {
 /*
  * 	Inicialización y configuración del TIMER Output Compare en modo PWM1.
  */
-
 	TIM_OCInitTypeDef TIM_OC_Config;
 
 	// Configuración del periférico
@@ -260,5 +281,5 @@ void bsp_pwm_init (void) {
 	TIM_ARRPreloadConfig(TIM4, ENABLE);
 
 	// Habilitación global del TIMER
-	TIM_Cmd(TIM2, ENABLE);
+	TIM_Cmd(TIM4, ENABLE);
 }

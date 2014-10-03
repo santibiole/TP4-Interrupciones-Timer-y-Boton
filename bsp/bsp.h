@@ -47,4 +47,9 @@ uint8_t sw_getState();
  */
 void bsp_init();
 
+/**
+ * @brief Toma de datos del acelerómetro
+ */
+float bsp_get_acc (char axis);
+
 #endif
